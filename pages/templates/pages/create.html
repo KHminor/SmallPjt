@@ -2,5 +2,10 @@
 
 {% block content %}
   <h1>여기는 생성 페이지</h1>
-  {{form.as_p}}
+
+  <form method='POST'>
+    {% csrf_token %}
+    {{form.as_p}}
+    <input type="submit">
+  </form>
 {% endblock content %}
