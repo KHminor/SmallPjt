@@ -212,7 +212,223 @@
      
      ```
 
-     
 
 ---
 
+## 2일차
+
+### 오늘의 작업
+
+* pages 앱 
+
+  1. models.py 수정
+
+     ```python
+     # models.py
+     from django.db import models
+     
+     # 기존의 model에서 해당 게시글을 
+     # 임의로 넣으려는 날짜인 write_date 와 update 된 날짜인 updated_date 를 추가 
+     class Article(models.Model):
+         title = models.CharField(max_length=30)
+         content = models.TextField()
+         write_date = models.DateField()
+         updated_date = models.DateField(auto_now=True)
+         created_date = models.DateField(auto_now_add=True) # date 필드 말고 추후 변경 예정일듯?
+     ```
+
+  2. form.py 수정
+
+     ```python
+     # forms.py
+     # content를 작은 크기가 아닌 입력하기 좋은 크기로 받기 위해 widget을 사용
+     # widget=forms.Textarea() 추가
+     # 또한 기존의 form에서 내가 직접 입력이 필요한 요소만 보이도록 하기
+     
+     
+     from django import forms
+     from .models import Article
+     
+     class ArticleForm(forms.ModelForm):
+         title = forms.CharField(max_length=30)
+         content = forms.CharField(
+             widget=forms.Textarea()
+         )
+         write_date = forms.DateField(
+             widget=forms.DateField()
+         )
+     
+         class Meta:
+             model = Article
+             fields = '__all__'
+     ```
+
+
+  3. urls.py 수정
+
+     ```python
+     # 기존의 데이터에서 detail, update, delete 추가
+     # 또한 해당 url들은 어떤 article인지 알아야 하기에 article_pk 값을 받도록 하기
+     from django.urls import path
+     from . import views
+     
+     app_name = 'pages'
+     
+     urlpatterns = [
+         path('', views.index, name='index'),
+         path('create/', views.create, name='create'),
+         path('<int:article_pk>/detail/', views.detail, name='detail'),
+         path('<int:article_pk>/update/', views.update, name='update'),
+         path("<int:article_pk>/delete/", views.delete, name="delete"),
+     ]
+     ```
+
+  4. views.py
+
+     ```python
+     # 기존의 데이터에서 detail, update, delete 추가
+     
+     # detail의 경우 어떤 article의 데이터인지 알기 위해 
+     # Article 모델에서 obejct.get을 사용하여 해당 article을 가져와서 보이도록 하기
+     def detail(request, article_pk):
+         article = Article.objects.get(pk=article_pk)
+         context = {
+             'article': article
+         }
+         return render(request, 'pages/detail.html', context)
+     # update의 경우 마찬가지로 어떤 article의 데이터인지 알기 위해 가져온 뒤
+     # POST 요청이 아닌 경우엔 
+     # ModelForm에 해당 article 정보를 instance=article 이렇게 데이터를 넣은 뒤 
+     # 요청한 사용자에게 데이터를 넣은 form을 보여주고
+     # POST 요청의 경우엔
+     # ModelForm에 수정한 데이터인 request.POST 데이터를 넣어줌과 동시에 
+     # 어떤 article에 대한 데이터인지 뒤에 instance=article 이렇게 데이터를 넣어주기
+     def update(request, article_pk):
+         article = Article.objects.get(pk=article_pk)
+         if request.method == 'POST':
+             form = ArticleForm(request.POST,instance=article)
+             if form.is_valid():
+                 form.save()
+                 return redirect('pages:detail', article_pk)
+         else:
+             form = ArticleForm(instance=article)
+         context = {
+             'form': form
+         }
+         return render(request, 'pages/update.html', context)
+     
+     # delete의 경우 어떤 article인지 가져온 뒤
+     # article.delete() 메서드를 이용해서 삭제해주기
+     def delete(request,article_pk):
+         article = Article.objects.get(pk=article_pk)
+         article.delete()
+         return redirect('pages:index')
+     ```
+
+  5. templates/ html 수정
+
+     ```html
+     <!-- index.html -->
+     {% extends 'base.html' %}
+     
+     {% block content %}
+       <h1>여기는 인덱스 페이지</h1>
+       <a href="{% url 'pages:create' %}"> 생성하기</a>
+       <hr>
+     
+       {% for article in articles  %}
+         <a href="{% url 'pages:detail' article.pk %}">
+           <p>{{article.title}}</p>
+         </a>
+         <hr>
+       {% endfor %}
+     {% endblock content %}
+     
+     <!-- create.html는 수정 안했음 -->
+     
+     <!-- detail.html -->
+     <!-- 얘는 좀 손게 있어서 따로 상속 받지 않고 사용 -->
+     <!DOCTYPE html>
+     <html lang="en">
+     <head>
+       <meta charset="UTF-8">
+       <meta http-equiv="X-UA-Compatible" content="IE=edge">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <style>
+         body {
+           width: 60%;
+           padding: 0 20%;
+           margin: 0;
+         }
+         
+     
+         #article > pre {
+           padding: 2rem 0;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           background-color: black;
+           color: white;
+         }
+     
+         #title {
+           margin-left: 10px;
+           font-size: 2rem;
+           font-weight: 900;
+         }
+     
+         #date {
+           font-size: 0.7rem;
+         }
+     
+         section + article {
+           margin-top: 5rem;
+           background-color: bisque;
+         }
+     
+         a {
+           text-decoration: none;
+           color: cadetblue;
+           font-weight: 400;
+         }
+     
+         a:hover {
+           color: darkolivegreen;
+         }
+       </style>
+       <title>Document</title>
+     </head>
+     <body >
+       <section>
+         <h1>✔</h1>
+       </section>
+       <article>
+         <div id="article">
+           <div id="title">{{article.title}}</div>
+           <span id="date">{{article.write_date}}</span>
+           <pre>{{article.content}}</pre>
+           <a href="{% url 'pages:update' article.pk %}">게시글 수정 / </a>
+           <a href="{% url 'pages:delete' article.pk %}">게시글 삭제</a>
+         </div>
+       </article>
+     
+       
+     
+       <a href="{% url 'pages:index' %}">메인페이지</a>
+     </body>
+     </html>
+     
+     <!-- update.html -->
+     {% extends 'base.html' %}
+     
+     {% block content %}
+       <h1>수정 페이지</h1>
+       <form method="POST">
+         {% csrf_token %}
+         {{form.as_p}}
+         <input type="submit" value="수정">
+       </form>
+     {% endblock content %}
+     ```
+
+     

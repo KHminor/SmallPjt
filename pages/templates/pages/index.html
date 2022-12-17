@@ -2,6 +2,14 @@
 
 {% block content %}
   <h1>여기는 인덱스 페이지</h1>
+  <a href="{% url 'pages:create' %}"> 생성하기</a>
+  <hr>
 
+  {% for article in articles  %}
+    <a href="{% url 'pages:detail' article.pk %}">
+      <p>{{article.title}}</p>
+    </a>
+    <hr>
+  {% endfor %}
 {% endblock content %}
 
