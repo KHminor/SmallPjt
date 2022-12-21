@@ -5,11 +5,15 @@
   <a href="{% url 'pages:create' %}"> 생성하기</a>
   <hr>
 
+  {% if articles %}
   {% for article in articles  %}
     <a href="{% url 'pages:detail' article.pk %}">
       <p>{{article.title}}</p>
     </a>
     <hr>
   {% endfor %}
+  {% else %}
+    <p>게시글을 작성해주세요 :)</p>
+  {% endif %}
 {% endblock content %}
 
