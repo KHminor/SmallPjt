@@ -89,7 +89,7 @@ def article_list(request):
 
 
 @api_view(['GET','DELETE', 'PUT'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def article_detail(request,article_pk):
     article = Article.objects.get(pk=article_pk)
     if request.method == "GET":

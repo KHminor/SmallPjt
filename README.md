@@ -1177,3 +1177,389 @@
 * 여기서 React의 경우 해당 App.js 에서 다른 하위 컴포넌트로 옮겨 갈 경우 
 
    App.js HTML 요소를 없애버리는 방법을 찾아봐야할 것 같다.
+   
+   
+   
+* 위의 문제를 해결했다!!
+
+   * 그냥 쉽게 생각하면 되는 부분이었는데 Main의 Route path를 그냥 '/' 로 변경하기만 하면 
+       홈페이지를 켜게 되면 보이는 첫 화면이 되게 되어서
+
+       내가 의도한대로 navigator를 이용해서 이동시 App.js 의 요소는 없이 
+       컴포넌트 변경시 마다 다른 요소들을 보여주도록 할 수 있게 되었다.
+
+       
+       
+       
+
+---
+
+## 6일차
+
+### 오늘의 작업
+
+- 리액트와 장고(DRF) 연동하기
+
+  - 기존에 axios 요청했던것에 대한 문제인 
+     CORS 문제가 해결이 되지 않았다는 것을 깨닫게 되었다.
+
+  - https://breathtaking-life.tistory.com/137 <- 블로그의 글을 보고 해결을 했다
+
+  - 해결 순서
+
+    1. django-cors-headers 설치
+
+       ```python
+       # Terminal
+       $ pip install django-cors-headers
+       ```
+
+    2. settings.py 수정 (총 5가지를 셋팅하기)
+
+       ```python
+       ALLOWED_HOSTS = ['*']
+       
+       INSTALLED_APPS = [
+       	...,
+           'corsheaders',
+       ]
+       
+       MIDDLEWARE = [
+           'corsheaders.middleware.CorsMiddleware',
+           ...,
+       ]
+       
+       CORS_ORIGIN_WHITELIST = ('http://127.0.0.1:3000', 'http://localhost:3000')
+       CORS_ALLOW_CREDENTIALS = True
+       ```
+
+  ```javascript
+  function Article() {
+    return (
+      <>
+        <button onClick={()=> {
+          axios({
+            method: 'GET',
+            url: 'http://127.0.0.1:8000/api/pages/articles/',
+            // headers: 'Token 313f28ca7d77c318ca829d8338af0590b5273eae'
+          })
+          .then((r)=> {
+            console.log(r)
+          })
+          .catch((e)=> {
+            console.log(e);
+          })
+        }}>버튼</button>
+      </>
+    )
+  }
+  ```
+
+  ![image-20221222225721712](README.assets/image-20221222225721712.png)
+
+  - 무사히 데이터의 요청이 성공했다.
+
+  
+
+  
+
+- Django에서 @permission_classes([IsAuthenticated]) 을 활성화 시켜서 
+   권한이 있는 사용자만 요청을 받을 수 있는 경우 
+   프론트에서 요청을 할 때 작성해야 하는 코드는 아래와 같다.
+
+  - 즉 headers에 바로 넣는 것이 아니라 Authorization의 속성에 값을 넣어줘야 한다.
+
+  ```javascript
+  <>
+      <button onClick={()=> {
+          axios({
+              method: 'GET',
+              url: 'http://127.0.0.1:8000/api/pages/articles/',
+              headers: {
+                  Authorization: "Token 313f28ca7d77c318ca829d8338af0590b5273eae"
+              }
+          })
+              .then((r)=> {
+              console.log(r)
+          })
+              .catch((e)=> {
+              console.log(e);
+          })
+      }}>버튼</button>
+  </>
+  ```
+
+  
+
+- 게시글을 article Route에서 출력을 하기위해 DRF로 axios 요청한 데이터를 
+   프론트에서 데이터를 가져올 수 있도록 했다
+
+  - 순서
+
+    1.  useState를 사용해서 axios로 가져온 게시글을 담을 state를 생성하기
+
+       ```javascript
+       import { useState } from "react"
+       
+       let [articles,setArticles] =  useState([])
+       ```
+
+    2. 버튼을 클릭시 해당 게시글이 보이도록 하기
+
+       ```javascript
+       import axios from "axios"
+       import { useState } from "react"
+       
+       function Article() {
+         let [articles,setArticles] =  useState([])
+         return (
+           <div>
+             <button onClick={()=> {
+               axios({
+                 method: 'GET',
+                 url: 'http://127.0.0.1:8000/api/pages/articles/',
+                 headers: {
+                   Authorization: "Token 313f28ca7d77c318ca829d8338af0590b5273eae"
+                 }
+               })
+               .then((r)=> {
+                 // console.log(r.data[0].title)
+                 setArticles(r.data)
+               })
+               .catch((e)=> {
+                 console.log(e);
+               })
+             }}>버튼</button>
+       
+             <div>{articles.map((article,idx)=> {
+               return (
+               <div key={idx}>
+                 <div>{article.title}</div>
+                 <span>{article.content}</span>
+                 <div>{article.write_date}</div>
+               </div>)
+             })}</div>
+           </div>
+         )
+       }
+       
+       export default Article
+       ```
+
+       
+
+  - 사소한 문제점 
+
+    - useState의 초기값을 그냥 비워두니까 map 함수가 먹지를 않아서 
+       useState([]) 로 빈 리스트를 넣어주니까 해결됐다.
+    - 우선 스타일링과 다른 내용은 내일 해야겠다 :)
+
+  ![image-20221222231651089](README.assets/image-20221222231651089.png)
+
+---
+
+## 7일차
+
+### 오늘의 작업
+
+- Signup.js
+
+  - 회원가입이 되는지 확인해보고 싶어서 해당 Signup 컴포넌트에서 
+     ID, PWD 를 입력 한 후 클릭을 누르게 되면 
+     회원가입 DRF url 로 요청을 보내어 회원가입이 되는지 확인을 해봤다.
+
+    ![image-20221223220655145](README.assets/image-20221223220655145.png)
+
+    회원가입이 되었기에 statusText 또한 Created 로 잘 나오고
+
+    ![image-20221223220751269](README.assets/image-20221223220751269.png)
+
+    ![image-20221223220807085](README.assets/image-20221223220807085.png)
+
+    db에서 accounts.user 과 authtoken 또한 데이터가 잘 들어왔다.
+
+    
+
+  - 그래서 지금 해야할 목표는 회원가입시 바로 로그인이 되도록 하는 것.
+
+  - 그 목표 성공해따!!
+
+  - 물론 아직 accounts.user 또는 authtoken_token 에서 key 값을 가져와서 
+     로그인 하는것은 안되지만
+
+  - Signup 페이지에서 회원가입 후 해당 토큰을 store 데이터에 담은 후
+
+  - Login 페이지에서 아이디와 비밀번호를 입력하면 해당 토큰을 headers 에 넣어
+     로그인 요청을 하고 난뒤 로그인 성공 문구와 함게 메인 페이지로 이동하도록 했다.  
+
+  
+
+- 우선 위의 과정을 순서로 나타내자면
+
+  1. Signup.js
+
+     * 클릭 버튼을 click시 axios 요청을 하여 회원가입을 하도록 하고 
+
+     * 성공하게 되면 token이 생성되는데 해당 token을 store.js 에서 token으로 데이터를 관리하는데 
+
+     * reducers의 changeToken의 params로 해당 데이터를 변경하고
+
+     * navigate를 통해 login 페이지로 이동
+
+       ```javascript
+       import axios from "axios"
+       import { useState } from "react"
+       import { useDispatch } from "react-redux"
+       import { changeToken } from "../store"
+       import {Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom'
+       
+       
+       function Signup() {
+         let navigate = useNavigate()
+         let dispatch = useDispatch()
+         let site = "http://127.0.0.1:8000"
+         let [username,setUsername] = useState()
+         let [password1,setPassword1] = useState()
+         let [password2,setPassword2] = useState()
+         return (
+           <div style={{background:'black', height: '100vh', width:'100vw', color:'white'}}>
+             Hi 여기는 Signup페이지
+             <li onClick={()=> {navigate('/login')}}>룓 로그인 하러가기 </li>
+             <div>
+               {/* <form action="POST"> */}
+                 <div><input type="text" placeholder={'ID'} onChange={(e)=> {
+                   setUsername(e.target.value)
+                   console.log(username);
+                 }}/></div>
+                 <div><input type="password" placeholder={'PWD'} onChange={(e)=> {
+                   setPassword1(e.target.value)
+                   console.log(password1);
+                 }}/></div>
+                 <div><input type="password" placeholder={'PWD'} onChange={(e)=> {
+                   setPassword2(e.target.value)
+                   console.log(password2);
+                 }}/></div>
+       
+               
+                 <button onClick={()=> {
+                   console.log(username,password1,password2);
+                   axios({
+                     method:'POST',
+                     url: `${site}/api/accounts/signup/`,
+                     data: {
+                       'username': username,
+                       'password1': password1,
+                       'password2': password2
+                     }
+                   })
+                   .then((r)=> {
+                     dispatch(changeToken(r.data))
+                     navigate('/login')
+                     console.log(r.data);
+                   })
+                   .catch((e)=> {
+                     console.log(e);
+                   })
+                 }}>클릭</button>
+               {/* </form> */}
+             </div>
+           </div>
+         )
+       }
+       export default Signup
+       ```
+
+       ```javascript
+       // store.js
+       
+       import { configureStore, createSlice } from '@reduxjs/toolkit'
+       
+       let token = createSlice({
+         name: 'token',
+         initialState: {token: ''},
+         reducers: {
+           changeToken(state,action) {
+             state.token = action.payload
+           }
+         }
+       })
+       
+       export let {changeToken} = token.actions
+       
+       
+       export default configureStore({
+         reducer: { 
+           token: token.reducer
+         }
+       })
+       ```
+
+       
+
+     * 이후 로그인페이지에서 현재 store에 있는 token의 값을 useSelector() 메서드를 통해 가져온 다음
+
+     * axios 요청을 통해 현재 입력한 ID, PWD 값과 함께 headers에 Token 값을 넣어주어 요청이 성공한다면
+
+     * 성공 알림과 함께 메인페이지로 이동
+
+       ```javascript
+       import axios from "axios"
+       import { useEffect, useState } from "react"
+       import { useSelector } from "react-redux"
+       import {Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom'
+       
+       function Login() {
+         let site = "http://127.0.0.1:8000"
+         let navigate = useNavigate()
+         let [username,setUsername] = useState()
+         let [password,setPassword] = useState()
+         let token = useSelector((state)=> {return state.token})
+         useEffect(()=> {
+           console.log(token.token.key);
+         },[])
+         return (
+           <div style={{background:'black', height: '100vh', width:'100vw', color:'white'}}>
+             Hi 여기는 로그인 페이지
+             <div>
+               {/* <form action="POST"> */}
+                 <div><input type="text" placeholder={'ID'} onChange={(e)=> {
+                   setUsername(e.target.value)
+                   console.log(username);
+                 }}/></div>
+                 <div><input type="password" placeholder={'PWD'} onChange={(e)=> {
+                   setPassword(e.target.value)
+                   console.log(password);
+                 }}/></div>
+       
+               
+                 <button onClick={()=> {
+                   console.log(username,password);
+                   axios({
+                     method:'POST',
+                     url: `${site}/api/accounts/login/`,
+                     data: {
+                       'username': username,
+                       'password': password,
+                     },
+                     headers: {
+                       Authorization: `Token ${token.token.key}` 
+                     }
+                   })
+                   .then((r)=> {
+                     alert('로그인 성공')
+                     console.log(r);
+                     navigate('/')
+                   })
+                   .catch((e)=> {
+                     console.log(e);
+                   })
+                 }}>클릭</button>
+               {/* </form> */}
+             </div>
+           </div>
+         )
+       }
+       export default Login
+       ```
+
+       

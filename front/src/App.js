@@ -1,35 +1,24 @@
 import './App.css';
+import Main from './routes/Main'
 import Dog from './routes/Dog'
 import Cat from './routes/Cat'
+import Article from './routes/Article'
+import Login from './routes/Login';
+import Signup from './routes/Signup';
 import {Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom'
 // import React, {useState} from 'react'
 function App() {
   let navigate = useNavigate()
   return (
     <div className="App">
-      <header>
-        
-      </header>
-      <section>
-        <div></div>
-        <div id='content'>
-          <div></div>
-          <div>
-            <ul>
-              <li onClick={()=> {navigate('dog/')}}>룓 강아지 보러가기 </li>
-              <li onClick={()=> {navigate('cat/')}}>룓 고양이 보러가기 </li>
-            </ul>
-          </div>
-          <div></div>
-        </div>
-        <div></div>
-      </section>
-      <footer>
-        
-      </footer>
+      
       <Routes >
+        <Route path='/' element={<><Main /></>}/>
+        <Route path='signup/' element={<><Signup /></>}/>
+        <Route path='login/' element={<><Login /></>}/>
         <Route path='dog/' element={<><Dog /></>}/>
         <Route path='cat/' element={<><Cat /></>}/>
+        <Route path='article/' element={<><Article /></>}/>
       </Routes>
     </div>
   );

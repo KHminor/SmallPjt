@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-d=)4wo^969=&(xnk4lba7^o5^5an@4gf&ys@=99w6c+f_00avk
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# django-cors-headers step 1
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -40,6 +41,9 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 
     'dj_rest_auth',
+
+    # django-cors-headers step 2
+    'corsheaders',
 
     # registraion
     'django.contrib.sites',
@@ -72,6 +76,9 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    # django-cors-headers step 3
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -157,3 +164,8 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
+
+# django-cors-headers step 4
+CORS_ORIGIN_WHITELIST = ('http://127.0.0.1:3000', 'http://localhost:3000')
+# django-cors-headers step 5
+CORS_ALLOW_CREDENTIALS = True
