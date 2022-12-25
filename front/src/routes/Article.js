@@ -1,35 +1,45 @@
 import axios from "axios"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSelector } from "react-redux"
 
 function Article() {
   let [articles,setArticles] =  useState([])
+  let token = useSelector((state)=> {return state.token})
+  let site = "http://127.0.0.1:8000"
+  useEffect(()=> {
+    axios({
+      method: 'GET',
+      url: `${site}/api/pages/articles/`,
+      headers: {
+        Authorization: `Token ${token.token}`
+      }
+    })
+    .then((r)=> {
+      setArticles(r.data)
+      // console.log(r.data);
+    })
+    .catch((e)=> {
+      console.log(e);
+    })
+  },[])
+  
+  
   return (
     <div>
-      <button onClick={()=> {
-        axios({
-          method: 'GET',
-          url: 'http://127.0.0.1:8000/api/pages/articles/',
-          headers: {
-            Authorization: "Token 313f28ca7d77c318ca829d8338af0590b5273eae"
-          }
+      {
+        articles.map((article,idx)=> {
+          return (
+            <div key={idx} style={{width:"60rem", backgroundColor:"black", color:'white'}}>
+              <div><span>Title: </span>{article.title}</div>
+              <pre style={{width:'100%'}}>{article.content}</pre>
+              <div>{article.write_date}</div>
+              <br />
+              <br />
+              <br />
+            </div>
+          )
         })
-        .then((r)=> {
-          // console.log(r.data[0].title)
-          setArticles(r.data)
-        })
-        .catch((e)=> {
-          console.log(e);
-        })
-      }}>버튼</button>
-
-      <div>{articles.map((article,idx)=> {
-        return (
-        <div key={idx}>
-          <div>{article.title}</div>
-          <span>{article.content}</span>
-          <div>{article.write_date}</div>
-        </div>)
-      })}</div>
+      }
     </div>
   )
 }

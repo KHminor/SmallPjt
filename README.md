@@ -1563,3 +1563,195 @@
        ```
 
        
+
+---
+
+## 8일차
+
+### 오늘의 작업
+
+- 몰랐던 부분
+  - Login DRF 로 axios 를 요청할 경우 Headers에 Authorization 값으로 Token을 넣지 않아도 요청이 성공한다는 부분
+  - 그리고 로그인 성공 시 Token 값을 준다는 것을 몰랐고 알게 되었다.
+
+- Signup.js
+
+  - 회원가입시 기존 요청은 회원가입 후 로그인 페이지로 이동하는 것이었다면
+
+  - 수정 후엔 회원가입 후 바로 로그인을 하여 main페이지로 이동하도록 하였다.
+
+    - 여기서 두번의 axios 요청을 하는 코드를 axios 두번으로 작성하지 않고 
+
+    - Promise.all([axios1, axios2]) 을 사용하였다.
+
+      ```javascript
+      <button onClick={()=> {
+          console.log(username,password1,password2);
+          Promise.all([ 
+              // 회원가입
+              axios({
+                  method:'POST',
+                  url: `${site}/api/accounts/signup/`,
+                  data: {
+                      'username': username,
+                      'password1': password1,
+                      'password2': password2
+                  }
+              }),
+              // 로그인
+              axios({
+                  method:'POST',
+                  url: `${site}/api/accounts/login/`,
+                  data: {
+                      'username': username,
+                      'password': password1,
+                  }
+                  // headers: {
+                  //   Authorization: `Token ${token.token.key}` 
+                  // }
+              })
+              .then((r)=> {
+                  alert('회원가입 성공')
+                  dispatch(changeToken(r.data.key))
+                  navigate('/')
+              })
+              .catch((e)=> {
+                  console.log(e);
+              })
+          ])
+      }}>클릭</button>
+      ```
+
+      
+
+* Article.js
+
+  * 기존의 요청은 버튼을 클릭시 게시글을 불러와서 보여주는 형식으로 했었다.
+
+  * 수정사항
+
+    * useEffect를 사용해서 Article.js 가 mount 될 시 axios 요청을 하여 해당 데이터를 state 변수에 넣어주도록 하고 
+
+    * map 함수를 통해 해당 articles 개수만큼 보여주도록 하였다.
+
+      ```javascript
+      import axios from "axios"
+      import { useEffect, useState } from "react"
+      import { useSelector } from "react-redux"
+      
+      function Article() {
+        let [articles,setArticles] =  useState([])
+        let token = useSelector((state)=> {return state.token})
+        let site = "http://127.0.0.1:8000"
+        useEffect(()=> {
+          axios({
+            method: 'GET',
+            url: `${site}/api/pages/articles/`,
+            headers: {
+              Authorization: `Token ${token.token}`
+            }
+          })
+          .then((r)=> {
+            setArticles(r.data)
+            // console.log(r.data);
+          })
+          .catch((e)=> {
+            console.log(e);
+          })
+        },[])
+        
+        
+        return (
+          <div>
+            {
+              articles.map((article,idx)=> {
+                return (
+                  <div key={idx} style={{width:"60rem", backgroundColor:"black", color:'white'}}>
+                    <div><span>Title: </span>{article.title}</div>
+                    <pre style={{width:'100%'}}>{article.content}</pre>
+                    <div>{article.write_date}</div>
+                    <br />
+                    <br />
+                    <br />
+                  </div>
+                )
+              })
+            }
+          </div>
+        )
+      }
+      
+      export default Article
+      ```
+
+  
+
+* Article_Create.js
+
+  * input 태그와 textarea에 입력한 요소를 state에 저장 후 
+
+  * 생성 버튼을 클릭시 axios 요청을 하여 게시글을 생성 하도록 했다.
+
+  * 물론 Token 값은 로그인시 저장한 state 값을 이용해서 사용하도록 했다.
+
+    ```javascript
+    import { useState } from "react"
+    import axios from 'axios'
+    import { useSelector } from "react-redux"
+    import { useNavigate } from "react-router-dom"
+    
+    function Article_Create() {
+      
+      let [title,setTitle] = useState()
+      let [content,setContent] = useState()
+      let [write_date,setWrite_date] = useState()
+      let navigate = useNavigate()
+      let token = useSelector((state)=> {return state.token})
+      let site = "http://127.0.0.1:8000"
+      return (
+        <div>
+          <h1>게시글 작성</h1> 
+          <div>
+            <input style={{width:"28.5rem", marginRight:"2rem"}} id="title" type="text" placeholder="title" onChange={(e)=> {
+              setTitle(e.target.value)
+            }}/>
+            <input style={{width:"19rem"}} type="date" placeholder="write_date" onChange={(e)=> {
+              setWrite_date(e.target.value)
+            }}/>
+          </div>
+          <div>
+            <textarea style={{width:'50rem',height:'55rem'}} name="content" wrap="hard" onChange={(e)=> {
+              setContent(e.target.value)
+            }}></textarea>
+          </div>
+          <div>
+            <button onClick={()=> {
+              axios({
+                method: 'POST',
+                url: `${site}/api/pages/articles/`,
+                data: {
+                  'title': title,
+                  'content': content,
+                  'write_date': write_date
+                },
+                headers: {
+                  Authorization: `Token ${token.token}`
+                }
+              })
+              .then(()=> {
+                alert('게시글 작성 완료💘')
+                navigate('/article')
+              })
+              .catch((e)=> {
+                console.log(e);
+              })
+            }}>생성</button>
+          </div>
+          
+        </div>
+      )
+    }
+    export default Article_Create
+    ```
+
+    
