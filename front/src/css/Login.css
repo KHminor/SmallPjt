@@ -1,0 +1,55 @@
+#backImg {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('../assets/Login_Background.gif');
+  background-size: cover;
+}
+
+#backImg > div:nth-child(1) {
+  /* border: 20rem solid #fbe290; */
+  /* position: absolute; */
+  /* top: 14.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 0;
+  border-radius: 100%; */
+  /* background-color: #fbe290; */
+}
+
+#backImg > div > div {
+  position: relative;
+  top: 1.2rem;
+}
+
+
+#backImg > div > div > div:nth-child(1) > input {
+  position: relative;
+  border: 2px whitesmoke groove;
+  margin-bottom: 0.5rem;
+  width: 20rem;
+  height: 3rem;
+  box-shadow: 10px 5px 5px gray;
+}
+
+#backImg > div > div > div:nth-child(2) > input {
+  position: relative;
+  border: 2px whitesmoke groove;
+  margin-bottom: 0.5rem;
+  width: 20rem;
+  height: 3rem;
+  box-shadow: 10px 5px 5px gray;
+}
+
+#backImg > div > div > div:nth-child(3) > button {
+  position: relative;
+  border: 2px whitesmoke groove;
+  width: 20.5rem;
+  height: 2rem;
+  box-shadow: 10px 5px 5px gray;
+  /* color: white; */
+}
